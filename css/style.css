@@ -208,3 +208,22 @@ textarea{resize:vertical}
   .towns a,.towns strong{font-size:1.5rem;padding:.9rem}
   .lead{padding:1.25rem;box-shadow:6px 6px 0 var(--ink)}
 }
+
+/* opening shot: zoom into the laptop screen (js/intro.js) */
+.intro{display:none}
+.play-intro .intro{display:block;position:fixed;inset:0;z-index:100;background:#0B0D0E;overflow:hidden;
+  animation:intro-failsafe 0s 9s forwards}
+@keyframes intro-failsafe{to{visibility:hidden;pointer-events:none}}
+.intro-stage{position:absolute;left:0;top:0;width:1792px;height:1008px;transform-origin:0 0;opacity:0;transition:opacity .5s}
+.intro.ready .intro-stage{opacity:1}
+.intro-stage img{display:block;width:1792px;height:1008px;max-width:none}
+.intro-screen{position:absolute;left:0;top:0;transform-origin:0 0;overflow:hidden;background:var(--lake);opacity:0;transition:opacity .7s ease-in;pointer-events:none}
+.intro.on .intro-screen{opacity:1}
+.intro-screen::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,rgba(255,255,255,.16),rgba(255,255,255,0) 45%);transition:opacity 1.2s;z-index:3}
+.intro.zoom .intro-screen::after{opacity:0}
+.intro-screen .hero{padding:3.2rem 0 4rem}
+.intro-skip{position:absolute;right:calc(1rem + env(safe-area-inset-right,0px));bottom:calc(1rem + env(safe-area-inset-bottom,0px));z-index:2;
+  font:600 .8rem var(--mono);letter-spacing:.08em;text-transform:uppercase;color:#fff;background:rgba(19,32,42,.7);border:2px solid #fff;border-radius:999px;padding:.5rem .9rem;cursor:pointer}
+.intro-skip:hover{background:#fff;color:var(--ink)}
+.intro.out{opacity:0;transition:opacity .6s ease}
+.intro.out .intro-skip{display:none}
