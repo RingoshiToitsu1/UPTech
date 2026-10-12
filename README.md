@@ -10,6 +10,8 @@ Free pickup and drop-off funnel for used laptops and desktops in Marquette, Nega
 | `marquette-mi/` `negaunee-mi/` `ishpeming-mi/` `harvey-mi/` | One page per town, for local search ("computer recycling Negaunee") |
 | `thank-you.html` | Where the form lands after a successful send (hidden from Google) |
 | `404.html` | Not-found page |
+| `admin.html` | Private request tracker and funnels (hidden from Google) |
+| `tools/backend.gs` | Google Apps Script backend for the form and admin |
 | `sitemap.xml`, `robots.txt` | For Google Search Console |
 
 Every page has the pickup form, LocalBusiness + FAQ structured data, and links to the other town pages.
@@ -31,16 +33,26 @@ Pages use root paths (`/css/style.css`), so the site needs to run on your own do
 3. At your domain registrar, add DNS records: four `A` records for `@` pointing to `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153`, and a `CNAME` for `www` pointing to `<your-username>.github.io`.
 4. Back in Settings → Pages, enter the domain and tick **Enforce HTTPS** once it's available.
 
-## 3. Connect the form
+## 3. Connect the form and admin (Google Apps Script)
 
 Out of the box, the form works without any setup: on a phone it opens a text message to your number with everything filled in; on a computer it shows the details and your number.
 
-To get submissions by email instead:
+To collect requests in a Google Sheet, get an email for each one, and use the admin page:
 
-1. Make a free form at formspree.io and copy its endpoint (`https://formspree.io/f/xxxxxxx`).
-2. Paste it into `FORM_ENDPOINT` in `js/config.js`.
+1. Make a new Google Sheet ("Yooper Tech Leads") → Extensions → Apps Script.
+2. Paste in `tools/backend.gs` and follow the SETUP steps at the top of that file (set a password, run `setup`, deploy as a web app with access "Anyone").
+3. Paste the web app URL (ends in `/exec`) into `API_URL` in `js/config.js`.
 
-Each submission includes the page it came from and any `utm_` tags, so you can see which town page or flyer is working.
+Each request records the page the visitor landed on and their source (`utm_source`, the referring site, or direct), so you can see which town page or flyer is working.
+
+### Admin page (`/admin.html`)
+
+Log in with the username and password from `backend.gs`. The password is checked inside Apps Script, so it is never stored in this repo.
+
+- **Requests:** every pickup request, newest and most urgent first. Mark each one New → Contacted → Scheduled → Picked up (or Not a fit), set the pickup time, units collected and notes.
+- **Funnels:** visitors → started the form → requests → scheduled → picked up, for the whole site and broken down by landing page, source and town, for the last 7 / 30 / 90 days or all time.
+
+Open `/admin.html#demo` to try it with sample data before the backend is connected.
 
 ## 4. Change the name, phone or copy
 

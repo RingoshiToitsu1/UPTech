@@ -1,15 +1,47 @@
 (function () {
-  var form = document.getElementById("lead");
-  if (!form) return;
-  var msg = document.getElementById("form-msg");
   var cfg = window.SITE || {};
+  var API = cfg.API_URL;
+  var form = document.getElementById("lead");
 
-  // keep where the visitor came from (UTM tags, page) so you know which town page / ad works
-  function source() {
-    var p = new URLSearchParams(location.search), out = [];
-    ["utm_source", "utm_medium", "utm_campaign"].forEach(function (k) { if (p.get(k)) out.push(k + "=" + p.get(k)); });
-    return location.pathname + (out.length ? " (" + out.join(", ") + ")" : "");
+  function get(store, k) { try { return window[store].getItem(k); } catch (e) { return null; } }
+  function set(store, k, v) { try { window[store].setItem(k, v); } catch (e) {} }
+
+  // anonymous visitor id, so the admin funnels count people rather than reloads
+  var visitor = get("localStorage", "yt_vid");
+  if (!visitor) { visitor = Math.random().toString(36).slice(2, 12); set("localStorage", "yt_vid", visitor); }
+
+  // first page and source of this visit, kept while they click around
+  var p = new URLSearchParams(location.search);
+  var attr = JSON.parse(get("sessionStorage", "yt_src") || "null");
+  if (!attr) {
+    var ref = "";
+    try { ref = document.referrer ? new URL(document.referrer).hostname.replace(/^www\./, "") : ""; } catch (e) {}
+    if (ref === location.hostname.replace(/^www\./, "")) ref = "";
+    attr = {
+      landing: location.pathname,
+      source: p.get("utm_source") || ref || "direct",
+      medium: p.get("utm_medium") || "",
+      campaign: p.get("utm_campaign") || "",
+      referrer: ref
+    };
+    set("sessionStorage", "yt_src", JSON.stringify(attr));
   }
+
+  function hit(event) {
+    if (!API || navigator.webdriver) return;
+    var key = "yt_" + event + location.pathname;
+    if (get("sessionStorage", key)) return;
+    set("sessionStorage", key, "1");
+    var body = JSON.stringify({ action: "hit", event: event, page: location.pathname, source: attr.source, visitor: visitor });
+    if (navigator.sendBeacon && navigator.sendBeacon(API, body)) return;
+    fetch(API, { method: "POST", body: body, keepalive: true, headers: { "Content-Type": "text/plain;charset=utf-8" } }).catch(function () {});
+  }
+
+  if (!form) return;
+  hit("view");
+  form.addEventListener("focusin", function () { hit("start"); });
+
+  var msg = document.getElementById("form-msg");
 
   function collect() {
     var fd = new FormData(form);
@@ -21,7 +53,7 @@
       items: fd.getAll("items").join(", ") || "Not specified",
       details: (fd.get("details") || "").trim(),
       handoff: fd.get("handoff") || "",
-      page: source(),
+      page: location.pathname,
       company: fd.get("company") || ""
     };
   }
@@ -44,6 +76,11 @@
       (d.details ? "\nDetails: " + d.details : "") + "\nPickup or drop-off: " + d.handoff;
   }
 
+  function fallback(text) {
+    msg.className = "form-msg err";
+    msg.innerHTML = text + " Text or call <a href=\"tel:" + cfg.PHONE_E164 + "\">" + cfg.PHONE + "</a> instead.";
+  }
+
   form.addEventListener("submit", function (e) {
     e.preventDefault();
     msg.className = "form-msg"; msg.textContent = "";
@@ -58,11 +95,10 @@
     }
     var btn = form.querySelector("button");
 
-    if (!cfg.FORM_ENDPOINT) {
-      // No endpoint yet: hand off as a text message, and show the details for desktop users
+    if (!API) {
+      // No backend yet: hand off as a text message, and show the details for desktop users
       var body = encodeURIComponent(asText(d));
-      var isPhone = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-      if (isPhone) {
+      if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         location.href = "sms:" + cfg.PHONE_E164 + (/iPhone|iPad|iPod/i.test(navigator.userAgent) ? "&" : "?") + "body=" + body;
       } else {
         msg.innerHTML = "Text or call <a href=\"tel:" + cfg.PHONE_E164 + "\">" + cfg.PHONE + "</a> with these details:<pre></pre>";
@@ -73,17 +109,17 @@
 
     btn.disabled = true; btn.textContent = "Sending…";
     delete d.company;
-    fetch(cfg.FORM_ENDPOINT, {
+    var payload = Object.assign({ action: "submit" }, d, attr, { page: location.pathname });
+    fetch(API, {
       method: "POST",
-      headers: { "Content-Type": "application/json", "Accept": "application/json" },
-      body: JSON.stringify(Object.assign({ _subject: "Pickup request: " + d.town + " (" + d.items + ")" }, d))
-    }).then(function (r) {
-      if (!r.ok) throw new Error(r.status);
+      headers: { "Content-Type": "text/plain;charset=utf-8" }, // plain text keeps Apps Script happy (no CORS preflight)
+      body: JSON.stringify(payload)
+    }).then(function (r) { return r.json(); }).then(function (j) {
+      if (!j.ok) throw new Error(j.error);
       location.href = "/thank-you.html";
     }).catch(function () {
       btn.disabled = false; btn.textContent = "Send my pickup request";
-      msg.className = "form-msg err";
-      msg.innerHTML = "The request didn't go through. Text or call <a href=\"tel:" + cfg.PHONE_E164 + "\">" + cfg.PHONE + "</a> instead.";
+      fallback("The request didn't go through.");
     });
   });
 })();

@@ -1,8 +1,9 @@
 // ===== Edit these =====
 window.SITE = {
-  // Where form submissions go. Paste a Formspree endpoint, e.g. "https://formspree.io/f/abcdwxyz".
+  // Your Google Apps Script web app URL (ends in /exec). See tools/backend.gs for setup.
+  // It receives the pickup form, counts visits for the admin funnels, and powers admin.html.
   // Leave "" and the form falls back to opening a pre-filled text message to PHONE.
-  FORM_ENDPOINT: "",
+  API_URL: "",
   PHONE: "906-235-5711",
   PHONE_E164: "+19062355711"
 };

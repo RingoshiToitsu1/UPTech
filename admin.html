@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Yooper Tech Admin</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Big+Shoulders+Display:wght@700;900&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/admin.css">
+</head>
+<body class="admin">
+
+<header class="top">
+  <div class="wrap top-row">
+    <a class="brand" href="/">Yooper Tech <small class="admin-tag">Admin</small></a>
+    <div class="bar-actions" id="barActions" hidden>
+      <button class="mini" id="refreshBtn" type="button">Refresh</button>
+      <button class="mini" id="logoutBtn" type="button">Log out</button>
+    </div>
+  </div>
+</header>
+
+<!-- LOGIN -->
+<main id="loginView" class="login-wrap">
+  <form id="loginForm" class="lead login-card" novalidate>
+    <p class="kicker">Private</p>
+    <h1>Pickup tracker</h1>
+    <p class="muted">Log in to see pickup requests and how each page is doing.</p>
+    <div class="field"><label for="u">Username</label><input id="u" name="user" autocomplete="username" autocapitalize="off" spellcheck="false" required></div>
+    <div class="field"><label for="p">Password</label><input id="p" name="pass" type="password" autocomplete="current-password" required></div>
+    <label class="remember"><input type="checkbox" id="remember"> Keep me logged in on this device</label>
+    <p class="form-msg err" id="loginErr" hidden></p>
+    <button class="btn" type="submit" id="loginBtn">Log in</button>
+  </form>
+</main>
+
+<!-- APP -->
+<main id="appView" hidden>
+  <div class="wrap">
+    <div class="app-head">
+      <div class="views" role="tablist">
+        <button type="button" role="tab" data-view="leads" aria-selected="true">Requests</button>
+        <button type="button" role="tab" data-view="funnels" aria-selected="false">Funnels</button>
+      </div>
+      <div class="range" id="range" role="group" aria-label="Date range">
+        <button type="button" data-days="7">7 days</button>
+        <button type="button" data-days="30" class="on">30 days</button>
+        <button type="button" data-days="90">90 days</button>
+        <button type="button" data-days="0">All time</button>
+      </div>
+    </div>
+
+    <div class="stats" id="stats"></div>
+
+    <section id="leadsView">
+      <div class="toolbar">
+        <div class="tabs" id="tabs" role="tablist"></div>
+        <input class="search" id="search" type="search" placeholder="Search name, phone, town, notes…">
+      </div>
+      <div id="list" class="leads"></div>
+      <p class="empty" id="empty" hidden>No requests here yet.</p>
+    </section>
+
+    <section id="funnelsView" hidden>
+      <div class="panel">
+        <h2>Whole site</h2>
+        <div id="funnelAll" class="funnel"></div>
+      </div>
+      <div class="panel">
+        <h2>Visitors and requests by day</h2>
+        <div id="daily" class="daily"></div>
+        <p class="legend"><span class="sw sw-v"></span>Visitors <span class="sw sw-r"></span>Requests</p>
+      </div>
+      <div class="panel">
+        <h2>By landing page</h2>
+        <p class="muted small">Visitors who opened each page, and the requests from people whose visit started there.</p>
+        <div class="table-wrap"><table class="ftable" id="byPage"></table></div>
+      </div>
+      <div class="panel">
+        <h2>By source</h2>
+        <p class="muted small">Where visitors came from: a utm_source tag (flyer, facebook…), the referring site, or direct.</p>
+        <div class="table-wrap"><table class="ftable" id="bySource"></table></div>
+      </div>
+      <div class="panel">
+        <h2>By town</h2>
+        <div class="table-wrap"><table class="ftable" id="byTown"></table></div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<div class="toast" role="status" aria-live="polite"></div>
+
+<script src="/js/config.js"></script>
+<script src="/js/admin.js"></script>
+</body>
+</html>
