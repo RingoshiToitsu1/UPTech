@@ -24,7 +24,7 @@ Every page has the pickup form, LocalBusiness + FAQ structured data, and links t
 
 This replaces `https://yourdomain.com` everywhere (canonical tags, sitemap, structured data) and writes a `CNAME` file.
 
-Pages use root paths (`/css/style.css`), so the site needs to run on your own domain, not `username.github.io/repo-name/`.
+Links are relative, so the site works both on your own domain and at `https://ringoshitoitsu1.github.io/UPTech/` before you have one.
 
 ## 2. Go live (GitHub Pages)
 

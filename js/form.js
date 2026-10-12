@@ -3,6 +3,12 @@
   var API = cfg.API_URL;
   var form = document.getElementById("lead");
 
+  // the site can live at a domain root or in a subfolder (username.github.io/UPTech/),
+  // so work out the site root from this script's own address
+  var me = document.currentScript && document.currentScript.src;
+  var ROOT = me ? new URL("../", me) : new URL("/", location.href);
+  var PAGE = "/" + location.pathname.slice(ROOT.pathname.length).replace(/index\.html$/, "");
+
   function get(store, k) { try { return window[store].getItem(k); } catch (e) { return null; } }
   function set(store, k, v) { try { window[store].setItem(k, v); } catch (e) {} }
 
@@ -18,7 +24,7 @@
     try { ref = document.referrer ? new URL(document.referrer).hostname.replace(/^www\./, "") : ""; } catch (e) {}
     if (ref === location.hostname.replace(/^www\./, "")) ref = "";
     attr = {
-      landing: location.pathname,
+      landing: PAGE,
       source: p.get("utm_source") || ref || "direct",
       medium: p.get("utm_medium") || "",
       campaign: p.get("utm_campaign") || "",
@@ -29,10 +35,10 @@
 
   function hit(event) {
     if (!API || navigator.webdriver) return;
-    var key = "yt_" + event + location.pathname;
+    var key = "yt_" + event + PAGE;
     if (get("sessionStorage", key)) return;
     set("sessionStorage", key, "1");
-    var body = JSON.stringify({ action: "hit", event: event, page: location.pathname, source: attr.source, visitor: visitor });
+    var body = JSON.stringify({ action: "hit", event: event, page: PAGE, source: attr.source, visitor: visitor });
     if (navigator.sendBeacon && navigator.sendBeacon(API, body)) return;
     fetch(API, { method: "POST", body: body, keepalive: true, headers: { "Content-Type": "text/plain;charset=utf-8" } }).catch(function () {});
   }
@@ -53,7 +59,7 @@
       items: fd.getAll("items").join(", ") || "Not specified",
       details: (fd.get("details") || "").trim(),
       handoff: fd.get("handoff") || "",
-      page: location.pathname,
+      page: PAGE,
       company: fd.get("company") || ""
     };
   }
@@ -109,14 +115,14 @@
 
     btn.disabled = true; btn.textContent = "Sending…";
     delete d.company;
-    var payload = Object.assign({ action: "submit" }, d, attr, { page: location.pathname });
+    var payload = Object.assign({ action: "submit" }, d, attr, { page: PAGE });
     fetch(API, {
       method: "POST",
       headers: { "Content-Type": "text/plain;charset=utf-8" }, // plain text keeps Apps Script happy (no CORS preflight)
       body: JSON.stringify(payload)
     }).then(function (r) { return r.json(); }).then(function (j) {
       if (!j.ok) throw new Error(j.error);
-      location.href = "/thank-you.html";
+      location.href = new URL("thank-you.html", ROOT).href;
     }).catch(function () {
       btn.disabled = false; btn.textContent = "Send my pickup request";
       fallback("The request didn't go through.");
